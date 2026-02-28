@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiUrl } from "@/lib/utils";
 
 interface FeedbackRow {
   id: number;
@@ -42,7 +43,7 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
     setError(null);
 
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch(apiUrl("/api/admin/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
@@ -136,7 +137,7 @@ export default function AdminFeedbackPage() {
   const fetchFeedback = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetch("/api/admin/feedback")
+    fetch(apiUrl("/api/admin/feedback"))
       .then((r) => {
         if (r.status === 401) {
           setAuthed(false);

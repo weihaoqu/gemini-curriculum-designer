@@ -12,6 +12,7 @@ import {
 import { SlideCard } from "@/components/shared/SlideCard";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { generateId } from "@/lib/parsers";
+import { apiUrl } from "@/lib/utils";
 import type {
   SlidePlanItem,
   ModuleSlidePlan,
@@ -51,7 +52,7 @@ export default function EnhanceStep3Page() {
     setError(null);
 
     try {
-      const res = await fetch("/api/enhance/slide-plan", {
+      const res = await fetch(apiUrl("/api/enhance/slide-plan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

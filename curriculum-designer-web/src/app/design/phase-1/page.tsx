@@ -13,6 +13,7 @@ import {
   parseSuggestedModulesJSON,
   stripJSONBlocks,
 } from "@/lib/parsers";
+import { apiUrl } from "@/lib/utils";
 import type { CourseInfo, CurriculumModule } from "@/lib/types/curriculum";
 
 type Step = "form" | "landscape" | "modules";
@@ -57,7 +58,7 @@ export default function Phase1Page() {
       setStep("landscape");
 
       try {
-        const response = await fetch("/api/curriculum/research", {
+        const response = await fetch(apiUrl("/api/curriculum/research"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),

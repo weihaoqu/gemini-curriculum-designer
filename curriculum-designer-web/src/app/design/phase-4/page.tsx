@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { useStreaming } from "@/lib/hooks/useStreaming";
 import { StreamingText } from "@/components/shared/StreamingText";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type { AssessmentType, AssessmentConfig, QuestionFormat } from "@/lib/types/curriculum";
 
 const assessmentOptions: {
@@ -109,7 +109,7 @@ export default function Phase4Page() {
   const configuredTypes = new Set(assessmentConfigs.map((c) => c.type));
 
   const handleGenerate = async () => {
-    const result = await stream("/api/curriculum/assessment", {
+    const result = await stream(apiUrl("/api/curriculum/assessment"), {
       courseInfo,
       modules,
       assessmentConfigs,

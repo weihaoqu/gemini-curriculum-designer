@@ -8,6 +8,7 @@ import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FeedbackDialog } from "@/components/shared/FeedbackDialog";
+import { apiUrl } from "@/lib/utils";
 
 export function WizardShell({ children }: { children: React.ReactNode }) {
   const reset = useCurriculumStore((s) => s.reset);
@@ -57,7 +58,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
             onClick={() => {
               if (confirm("Start over? All progress will be lost.")) {
                 reset();
-                window.location.href = "/";
+                window.location.href = apiUrl("/");
               }
             }}
           >

@@ -15,7 +15,7 @@ import { StreamingText } from "@/components/shared/StreamingText";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { useStreaming } from "@/lib/hooks/useStreaming";
 import { generateId } from "@/lib/parsers";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type {
   Prerequisite,
   CoreConcept,
@@ -97,7 +97,7 @@ export function ModuleInterview({ moduleIndex }: ModuleInterviewProps) {
     updateModule(moduleIndex, { status: "interviewing-prereqs" });
 
     try {
-      const res = await fetch("/api/curriculum/module/prerequisites", {
+      const res = await fetch(apiUrl("/api/curriculum/module/prerequisites"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,7 +145,7 @@ export function ModuleInterview({ moduleIndex }: ModuleInterviewProps) {
     });
 
     try {
-      const res = await fetch("/api/curriculum/module/concepts", {
+      const res = await fetch(apiUrl("/api/curriculum/module/concepts"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +192,7 @@ export function ModuleInterview({ moduleIndex }: ModuleInterviewProps) {
     });
 
     try {
-      const res = await fetch("/api/curriculum/module/lessons", {
+      const res = await fetch(apiUrl("/api/curriculum/module/lessons"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -255,7 +255,7 @@ export function ModuleInterview({ moduleIndex }: ModuleInterviewProps) {
     updateModule(moduleIndex, { status: "generating", lessonPlan: plan });
 
     const content = await generation.stream(
-      "/api/curriculum/module/generate",
+      apiUrl("/api/curriculum/module/generate"),
       {
         courseInfo,
         moduleName: module.name,

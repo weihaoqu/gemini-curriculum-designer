@@ -18,7 +18,7 @@ import { ExportButtons } from "@/components/shared/ExportButtons";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { buildExportFiles } from "@/lib/export/markdown";
 import { SLIDE_TYPE_COLORS, SLIDE_TYPE_LABELS } from "@/components/shared/SlideCard";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type { DifficultyLevel, CurriculumStore } from "@/lib/types/curriculum";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -421,7 +421,7 @@ function RequestImplementationDialog({
       const files = buildExportFiles(store);
       const filesContent = files.map((f) => `--- ${f.name} ---\n${f.content}`).join("\n\n");
 
-      const res = await fetch("/api/implementation-request", {
+      const res = await fetch(apiUrl("/api/implementation-request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

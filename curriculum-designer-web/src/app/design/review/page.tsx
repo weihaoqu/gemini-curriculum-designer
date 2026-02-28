@@ -22,6 +22,7 @@ import { ExportButtons } from "@/components/shared/ExportButtons";
 import { StreamingText } from "@/components/shared/StreamingText";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { buildExportFiles } from "@/lib/export/markdown";
+import { apiUrl } from "@/lib/utils";
 import type { CurriculumStore } from "@/lib/types/curriculum";
 
 export default function ReviewPage() {
@@ -271,7 +272,7 @@ function RequestImplementationDialog({
       const files = buildExportFiles(store);
       const filesContent = files.map((f) => `--- ${f.name} ---\n${f.content}`).join("\n\n");
 
-      const res = await fetch("/api/implementation-request", {
+      const res = await fetch(apiUrl("/api/implementation-request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

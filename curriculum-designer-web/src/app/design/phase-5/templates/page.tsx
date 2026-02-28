@@ -12,6 +12,7 @@ import {
 import { StreamingText } from "@/components/shared/StreamingText";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { useStreaming } from "@/lib/hooks/useStreaming";
+import { apiUrl } from "@/lib/utils";
 
 export default function TemplatesPageWrapper() {
   return (
@@ -47,7 +48,7 @@ function TemplatesPage() {
       selectedDeliveryFormats.length > 0
     ) {
       generationTriggered.current = true;
-      stream("/api/curriculum/delivery", {
+      stream(apiUrl("/api/curriculum/delivery"), {
         courseInfo,
         modules,
         deliveryFormats: selectedDeliveryFormats,

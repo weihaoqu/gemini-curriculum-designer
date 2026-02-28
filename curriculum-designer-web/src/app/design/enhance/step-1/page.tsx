@@ -12,7 +12,7 @@ import {
   parseScopeJSON,
   stripJSONBlocks,
 } from "@/lib/parsers";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import { AREA_LABELS } from "@/lib/claude/prompts";
 import type { EnhanceScopeType, CourseArea } from "@/lib/types/curriculum";
 
@@ -96,7 +96,7 @@ export default function EnhanceStep1Page() {
 
     try {
       const materialType = isFullCurriculum ? "syllabus" : "slides";
-      const response = await fetch("/api/enhance/scope", {
+      const response = await fetch(apiUrl("/api/enhance/scope"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ files: uploadedFiles, materialType, courseContext: enhanceCourseContext }),

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { generateId } from "@/lib/parsers";
 import type { CoreConcept, ConceptPriority } from "@/lib/types/curriculum";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 
 interface ConceptsStepProps {
   concepts: CoreConcept[];
@@ -106,7 +106,7 @@ export function ConceptsStep({
 
     setDeepDiveLoading(concept.id);
     try {
-      const res = await fetch("/api/curriculum/module/deep-dive", {
+      const res = await fetch(apiUrl("/api/curriculum/module/deep-dive"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

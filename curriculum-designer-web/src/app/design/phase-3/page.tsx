@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { generateId } from "@/lib/parsers";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type {
   DifficultyLevel,
   DifficultyQuestion,
@@ -123,7 +123,7 @@ export default function Phase3Page() {
 
     const mod = modules[moduleIndex];
     try {
-      const res = await fetch("/api/curriculum/calibrate", {
+      const res = await fetch(apiUrl("/api/curriculum/calibrate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

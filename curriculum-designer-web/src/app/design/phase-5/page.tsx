@@ -13,7 +13,7 @@ import {
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { SlideCard } from "@/components/shared/SlideCard";
 import { generateId } from "@/lib/parsers";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type {
   CourseArea,
   DeliveryFormat,
@@ -680,7 +680,7 @@ export default function Phase5Page() {
   const handleGenerateSlidePlan = async () => {
     setIsGeneratingPlan(true);
     try {
-      const res = await fetch("/api/curriculum/slide-plan", {
+      const res = await fetch(apiUrl("/api/curriculum/slide-plan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ courseInfo, modules, difficultyCalibrations }),

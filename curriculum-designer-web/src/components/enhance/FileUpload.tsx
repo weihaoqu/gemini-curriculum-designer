@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { generateId } from "@/lib/parsers";
+import { apiUrl } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_EXTENSIONS = [
@@ -92,7 +93,7 @@ export function FileUpload() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/enhance/extract-text", {
+        const response = await fetch(apiUrl("/api/enhance/extract-text"), {
           method: "POST",
           body: formData,
         });

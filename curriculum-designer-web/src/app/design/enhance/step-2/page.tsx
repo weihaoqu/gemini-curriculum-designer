@@ -12,7 +12,7 @@ import {
   parseTopicSuggestionsJSON,
   stripJSONBlocks,
 } from "@/lib/parsers";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 import type {
   DifficultyLevel,
   DifficultyQuestion,
@@ -165,7 +165,7 @@ export default function EnhanceStep2Page() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch("/api/enhance/extract-text", {
+      const response = await fetch(apiUrl("/api/enhance/extract-text"), {
         method: "POST",
         body: formData,
       });
@@ -193,7 +193,7 @@ export default function EnhanceStep2Page() {
     setError(null);
 
     try {
-      const response = await fetch("/api/enhance/topic-suggestions", {
+      const response = await fetch(apiUrl("/api/enhance/topic-suggestions"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -264,7 +264,7 @@ export default function EnhanceStep2Page() {
         .map((f) => f.content)
         .join("\n\n");
 
-      const res = await fetch("/api/enhance/topic-calibrate", {
+      const res = await fetch(apiUrl("/api/enhance/topic-calibrate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

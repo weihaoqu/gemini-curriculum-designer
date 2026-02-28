@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, apiUrl } from "@/lib/utils";
 
 const createPhaseLabels: Record<number, string> = {
   1: "Phase 1: Course Vision",
@@ -72,7 +72,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
     setError(null);
 
     try {
-      const res = await fetch("/api/curriculum/feedback", {
+      const res = await fetch(apiUrl("/api/curriculum/feedback"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
