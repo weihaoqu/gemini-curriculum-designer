@@ -3,17 +3,44 @@
 import { useCallback, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { generateId } from "@/lib/parsers";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ACCEPTED_EXTENSIONS = [".md", ".txt", ".pdf", ".docx"];
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+const ACCEPTED_EXTENSIONS = [
+  ".md", ".txt",       // text — client-side
+  ".pdf",              // PDF — server (pdf-parse)
+  ".docx",             // Word — server (mammoth)
+  ".pptx",             // PowerPoint — server (officeparser)
+  ".xlsx",             // Excel — server (officeparser)
+  ".csv",              // CSV — client-side
+  ".html", ".htm",     // HTML — client-side (strip tags)
+  ".rtf",              // RTF — server (officeparser)
+];
+
+/** Extensions handled entirely in the browser (no server round-trip). */
+const CLIENT_EXTENSIONS = [".md", ".txt", ".csv", ".html", ".htm"];
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** Strips HTML tags to extract readable text. */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 export function FileUpload() {
@@ -29,7 +56,7 @@ export function FileUpload() {
 
       if (file.size > MAX_FILE_SIZE) {
         setError(
-          `"${file.name}" exceeds the 2MB limit (${formatFileSize(file.size)}). Try a smaller file.`
+          `"${file.name}" exceeds the 4 MB limit (${formatFileSize(file.size)}). Try a smaller file.`
         );
         return;
       }
@@ -37,14 +64,20 @@ export function FileUpload() {
       const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
       if (!ACCEPTED_EXTENSIONS.includes(ext)) {
         setError(
-          `"${file.name}" is not supported. Accepted: ${ACCEPTED_EXTENSIONS.join(", ")}. For .pptx, export as PDF first.`
+          `"${file.name}" is not supported. Accepted: ${ACCEPTED_EXTENSIONS.join(", ")}.`
         );
         return;
       }
 
-      // Text files: read client-side
-      if (ext === ".md" || ext === ".txt") {
-        const content = await file.text();
+      // --- Client-side text extraction ---
+      if (CLIENT_EXTENSIONS.includes(ext)) {
+        let content = await file.text();
+
+        // Strip HTML tags for .html/.htm files
+        if (ext === ".html" || ext === ".htm") {
+          content = stripHtml(content);
+        }
+
         addUploadedFile({
           id: generateId(),
           name: file.name,
@@ -53,7 +86,7 @@ export function FileUpload() {
         return;
       }
 
-      // PDF/DOCX: extract server-side
+      // --- Server-side extraction (PDF, DOCX, PPTX, XLSX, RTF) ---
       setExtracting(true);
       try {
         const formData = new FormData();
@@ -116,16 +149,13 @@ export function FileUpload() {
             {extracting ? "Extracting text..." : "Drop files here or click to browse"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Accepts .md, .txt, .pdf, .docx (max 2MB each)
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Have a .pptx? Export it as PDF first.
+            Supports .pptx, .pdf, .docx, .xlsx, .csv, .html, .md, .txt, .rtf (max 4 MB each)
           </p>
           <input
             ref={inputRef}
             type="file"
             multiple
-            accept=".md,.txt,.pdf,.docx"
+            accept={ACCEPTED_EXTENSIONS.join(",")}
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
           />

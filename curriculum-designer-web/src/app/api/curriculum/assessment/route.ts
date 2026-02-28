@@ -1,23 +1,40 @@
 import { getAnthropicClient } from "@/lib/claude/client";
 import { SYSTEM_PROMPT, MODEL, MAX_TOKENS } from "@/lib/claude/prompts";
-import { buildAssessmentPrompt } from "@/lib/claude/assessment";
-import type { CourseInfo, CurriculumModule, AssessmentType } from "@/lib/types/curriculum";
+import { buildAssessmentPrompt, buildAssessmentPromptFromConfigs } from "@/lib/claude/assessment";
+import type { CourseInfo, CurriculumModule, AssessmentType, AssessmentConfig, ModuleDifficultyCalibration } from "@/lib/types/curriculum";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { courseInfo, modules, assessmentTypes } = body as {
+    const {
+      courseInfo,
+      modules,
+      assessmentTypes,
+      assessmentConfigs,
+      difficultyCalibrations,
+    } = body as {
       courseInfo: CourseInfo;
       modules: CurriculumModule[];
-      assessmentTypes: AssessmentType[];
+      assessmentTypes?: AssessmentType[];
+      assessmentConfigs?: AssessmentConfig[];
+      difficultyCalibrations?: ModuleDifficultyCalibration[];
     };
 
-    if (!courseInfo || !modules || !assessmentTypes?.length) {
+    if (!courseInfo || !modules) {
       return new Response("Missing required fields", { status: 400 });
     }
 
+    // Use new config-based prompt if available, otherwise fall back to legacy
+    let userPrompt: string;
+    if (assessmentConfigs && assessmentConfigs.length > 0) {
+      userPrompt = buildAssessmentPromptFromConfigs(courseInfo, modules, assessmentConfigs, difficultyCalibrations);
+    } else if (assessmentTypes && assessmentTypes.length > 0) {
+      userPrompt = buildAssessmentPrompt(courseInfo, modules, assessmentTypes, difficultyCalibrations);
+    } else {
+      return new Response("No assessment types or configs provided", { status: 400 });
+    }
+
     const client = getAnthropicClient();
-    const userPrompt = buildAssessmentPrompt(courseInfo, modules, assessmentTypes);
 
     const stream = client.messages.stream({
       model: MODEL,

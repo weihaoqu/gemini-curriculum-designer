@@ -5,6 +5,9 @@ import type {
   ChangeItem,
   WhatsNewItem,
   WhatsNewCategory,
+  ScopeSuggestion,
+  EnhanceTopicItem,
+  TopicSuggestion,
 } from "@/lib/types/curriculum";
 
 let counter = 0;
@@ -69,7 +72,7 @@ export function parseTopicLandscapeJSON(
           id: generateId(),
           name: t.name ?? "",
           description: t.description ?? "",
-          included: true,
+          included: false,
         }))
       : [];
 
@@ -79,7 +82,7 @@ export function parseTopicLandscapeJSON(
           name: t.name ?? "",
           description: t.description ?? "",
           category: t.category,
-          included: true,
+          included: false,
         }))
       : [];
 
@@ -90,7 +93,7 @@ export function parseTopicLandscapeJSON(
           type: r.type ?? "resource",
           description: r.description ?? "",
           url: r.url,
-          included: true,
+          included: false,
         }))
       : [];
 
@@ -249,6 +252,78 @@ export function parseWhatsNewJSON(
 }
 
 /**
+ * Parse the scope analysis JSON block from the AI response.
+ * Returns topics and scope suggestions, or null if missing/malformed.
+ */
+export function parseScopeJSON(
+  fullContent: string
+): {
+  courseName: string;
+  currentScope: string;
+  topics: EnhanceTopicItem[];
+  scopeSuggestions: ScopeSuggestion[];
+} | null {
+  const raw = extractJSONBlock(fullContent, "scope") as Record<string, unknown> | null;
+  if (!raw) return null;
+
+  try {
+    const topics = Array.isArray(raw.topics)
+      ? raw.topics.map((t: Record<string, string>) => ({
+          id: generateId(),
+          name: t.name ?? "",
+          description: t.description ?? "",
+          weekOrModule: t.weekOrModule ?? "",
+          selected: true,
+          status: "pending" as const,
+        }))
+      : [];
+
+    const validTypes = ["add-topic", "merge-topics", "reorder", "remove-topic", "update-scope"];
+    const scopeSuggestions = Array.isArray(raw.scopeSuggestions)
+      ? raw.scopeSuggestions.map((s: Record<string, string>) => ({
+          id: generateId(),
+          type: (validTypes.includes(s.type) ? s.type : "update-scope") as ScopeSuggestion["type"],
+          title: s.title ?? "",
+          description: s.description ?? "",
+          accepted: false,
+        }))
+      : [];
+
+    return {
+      courseName: (raw.courseName as string) ?? "",
+      currentScope: (raw.currentScope as string) ?? "",
+      topics,
+      scopeSuggestions,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse per-topic suggestions JSON block from the AI response.
+ */
+export function parseTopicSuggestionsJSON(
+  fullContent: string
+): TopicSuggestion[] | null {
+  const raw = extractJSONBlock(fullContent, "topic-suggestions");
+  if (!Array.isArray(raw)) return null;
+
+  try {
+    const validCategories = ["new-content", "exercise", "interaction", "animation", "update"];
+    return raw.map((item: Record<string, string>) => ({
+      id: generateId(),
+      category: (validCategories.includes(item.category) ? item.category : "update") as TopicSuggestion["category"],
+      title: item.title ?? "",
+      description: item.description ?? "",
+      selected: true,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Remove JSON blocks from the display markdown so they don't clutter the view.
  */
 export function stripJSONBlocks(content: string): string {
@@ -258,6 +333,8 @@ export function stripJSONBlocks(content: string): string {
     .replace(/```json-analysis\s*\n[\s\S]*?\n```/gi, "")
     .replace(/```json-change\s*\n[\s\S]*?\n```/gi, "")
     .replace(/```json-whatsnew\s*\n[\s\S]*?\n```/gi, "")
+    .replace(/```json-scope\s*\n[\s\S]*?\n```/gi, "")
+    .replace(/```json-topic-suggestions\s*\n[\s\S]*?\n```/gi, "")
     .replace(/<!--\s*json-landscape\s*-->[\s\S]*?(?:<!--|$)/gi, "")
     .replace(/<!--\s*json-modules\s*-->[\s\S]*?(?:<!--|$)/gi, "")
     .trim();

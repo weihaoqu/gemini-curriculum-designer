@@ -1,4 +1,18 @@
+export type CourseArea =
+  | "computer-science"
+  | "business"
+  | "mathematics"
+  | "biology"
+  | "engineering"
+  | "arts-humanities"
+  | "social-sciences"
+  | "health-sciences"
+  | "education"
+  | "other";
+
 export interface CourseInfo {
+  scope: "full-course" | "single-topic";
+  area: CourseArea;
   topic: string;
   audience: "beginners" | "intermediate" | "advanced" | "mixed";
   format: "semester" | "bootcamp" | "workshop" | "self-paced";
@@ -125,14 +139,104 @@ export type AssessmentType =
   | "peer-reviews"
   | "portfolio";
 
+export type QuestionFormat =
+  | "multiple-choice"
+  | "short-answer"
+  | "true-false"
+  | "fill-blank"
+  | "poll"
+  | "code-analysis"
+  | "essay"
+  | "matching";
+
+export interface AssessmentConfig {
+  type: AssessmentType;
+  difficulty: DifficultyLevel | "auto";
+  questionFormats: QuestionFormat[];
+  questionCount: number;
+  perModule: boolean;
+  // Category-specific (all optional)
+  timeLimitMinutes?: number;
+  numberOfAssessments?: number;
+  groupWork?: boolean;
+  milestones?: number;
+  wordCountRange?: string;
+  anonymous?: boolean;
+  artifactCount?: number;
+}
+
 export type DeliveryFormat =
-  | "slides"
   | "jupyter"
   | "lms"
-  | "video-scripts"
-  | "github-repo";
+  | "cheat-sheets"
+  | "study-guides"
+  | "instructor-notes"
+  | "github-repo"
+  | "lab-environments"
+  | "api-documentation"
+  | "lab-protocols"
+  | "case-studies"
+  | "simulation-scenarios"
+  | "problem-sets"
+  | "proof-templates"
+  | "flashcard-decks";
 
-export type Phase = 0 | 1 | 2 | 3 | 4;
+// --- Slide Plan types (Phase 5, View 1) ---
+
+export type SlideType =
+  | "title"
+  | "objectives"
+  | "concept"
+  | "code-example"
+  | "exercise"
+  | "quiz"
+  | "animation"
+  | "interactive"
+  | "discussion"
+  | "summary"
+  | "divider";
+
+export interface SlidePlanItem {
+  id: string;
+  title: string;
+  bulletPoints: string[];
+  slideType: SlideType;
+  enabled: boolean;
+  teachingNotes?: string;
+  notes?: string;
+}
+
+export interface ModuleSlidePlan {
+  moduleIndex: number;
+  moduleName: string;
+  slides: SlidePlanItem[];
+}
+
+export type Phase = 0 | 1 | 2 | 3 | 4 | 5;
+
+// --- Difficulty Calibration types (Phase 3) ---
+
+export type DifficultyLevel = "basic" | "intermediate" | "advanced";
+
+export type QuestionType = "short-answer" | "multiple-choice";
+
+export interface DifficultyQuestion {
+  id: string;
+  level?: DifficultyLevel; // optional — new unlabeled questions omit this
+  questionType: QuestionType;
+  question: string;
+  sampleAnswer: string;
+  choices?: string[];
+  correctChoice?: string;
+}
+
+export interface ModuleDifficultyCalibration {
+  moduleIndex: number;
+  moduleName: string;
+  questions: DifficultyQuestion[]; // 10 items (5 SA + 5 MC, unlabeled)
+  assignedLevels: Record<string, DifficultyLevel | null>; // questionId → instructor-assigned level
+  selectedLevel: DifficultyLevel | null; // kept for backward compat
+}
 
 export interface CurriculumState {
   courseInfo: CourseInfo | null;
@@ -142,8 +246,11 @@ export interface CurriculumState {
   suggestedModulesStructured: SuggestedModule[] | null;
   modules: CurriculumModule[];
   currentModuleIndex: number;
+  difficultyCalibrations: ModuleDifficultyCalibration[];
   selectedAssessmentTypes: AssessmentType[];
+  assessmentConfigs: AssessmentConfig[];
   assessmentsContent: string | null;
+  slidePlan: ModuleSlidePlan[] | null;
   selectedDeliveryFormats: DeliveryFormat[];
   deliveryContent: string | null;
   currentPhase: Phase;
@@ -163,12 +270,80 @@ export interface CurriculumActions {
   updateSuggestedModule: (id: string, updates: Partial<SuggestedModule>) => void;
   setCurrentModuleIndex: (index: number) => void;
   setSelectedAssessmentTypes: (types: AssessmentType[]) => void;
+  setAssessmentConfigs: (configs: AssessmentConfig[]) => void;
+  upsertAssessmentConfig: (config: AssessmentConfig) => void;
+  removeAssessmentConfig: (type: AssessmentType) => void;
   setAssessmentsContent: (content: string) => void;
+  setSlidePlan: (plan: ModuleSlidePlan[]) => void;
+  updateSlidePlanItem: (
+    moduleIndex: number,
+    slideId: string,
+    updates: Partial<SlidePlanItem>
+  ) => void;
+  addSlidePlanItem: (moduleIndex: number, slide: SlidePlanItem) => void;
+  removeSlidePlanItem: (moduleIndex: number, slideId: string) => void;
+  reorderSlidePlanItem: (moduleIndex: number, fromIdx: number, toIdx: number) => void;
   setSelectedDeliveryFormats: (formats: DeliveryFormat[]) => void;
   setDeliveryContent: (content: string) => void;
+  setDifficultyCalibrations: (calibrations: ModuleDifficultyCalibration[]) => void;
+  updateModuleDifficulty: (moduleIndex: number, level: DifficultyLevel) => void;
+  assignQuestionLevel: (moduleIndex: number, questionId: string, level: DifficultyLevel | null) => void;
   toggleLandscapeItem: (category: "trends" | "tools" | "resources", id: string) => void;
   setCurrentPhase: (phase: Phase) => void;
   reset: () => void;
+}
+
+// --- Enhance course context (optional, for better AI suggestions) ---
+
+export interface EnhanceCourseContext {
+  area: CourseArea;
+  audience: CourseInfo["audience"];
+  philosophy: CourseInfo["philosophy"];
+}
+
+// --- Enhance V2 types (topic-centric flow) ---
+
+export type EnhanceTopicStatus =
+  | "pending"
+  | "materials-uploaded"
+  | "suggestions-generated"
+  | "calibrated"
+  | "complete";
+
+export interface EnhanceTopicItem {
+  id: string;
+  name: string;
+  description: string;
+  weekOrModule: string;
+  selected: boolean;
+  status: EnhanceTopicStatus;
+}
+
+export interface TopicSuggestion {
+  id: string;
+  category: "new-content" | "exercise" | "interaction" | "animation" | "update";
+  title: string;
+  description: string;
+  selected: boolean;
+}
+
+export interface ScopeSuggestion {
+  id: string;
+  type: "add-topic" | "merge-topics" | "reorder" | "remove-topic" | "update-scope";
+  title: string;
+  description: string;
+  accepted: boolean;
+}
+
+export type EnhanceScopeType = "full-curriculum" | "single-topic";
+
+export interface EnhanceTopicDeepDive {
+  topicId: string;
+  instructorNotes: string;
+  uploadedMaterials: UploadedFile[];
+  suggestionsRaw: string | null;
+  suggestions: TopicSuggestion[];
+  calibration: ModuleDifficultyCalibration | null;
 }
 
 // --- Enhancement types (Mode A) ---
@@ -286,6 +461,15 @@ export interface EnhancementState {
   changes: ChangeItem[];
   changelog: ChangelogEntry[];
   enhancePhase: Phase;
+  // V2 enhance fields
+  enhanceScopeType: EnhanceScopeType | null;
+  enhanceScopeRaw: string | null;
+  enhanceScopeSuggestions: ScopeSuggestion[];
+  enhanceTopics: EnhanceTopicItem[];
+  enhanceCurrentTopicIndex: number;
+  enhanceTopicDeepDives: EnhanceTopicDeepDive[];
+  enhanceSlidePlan: ModuleSlidePlan[] | null;
+  enhanceCourseContext: EnhanceCourseContext | null;
 }
 
 export interface EnhancementActions {
@@ -310,6 +494,31 @@ export interface EnhancementActions {
   addChangelogEntry: (entry: ChangelogEntry) => void;
   setChangelog: (entries: ChangelogEntry[]) => void;
   setEnhancePhase: (phase: Phase) => void;
+  // V2 enhance actions
+  setEnhanceScopeType: (scopeType: EnhanceScopeType) => void;
+  setEnhanceScopeRaw: (content: string) => void;
+  setEnhanceScopeSuggestions: (suggestions: ScopeSuggestion[]) => void;
+  toggleScopeSuggestion: (id: string) => void;
+  setEnhanceTopics: (topics: EnhanceTopicItem[]) => void;
+  toggleEnhanceTopicSelection: (id: string) => void;
+  selectAllEnhanceTopics: () => void;
+  deselectAllEnhanceTopics: () => void;
+  setEnhanceCurrentTopicIndex: (index: number) => void;
+  updateEnhanceTopicStatus: (topicId: string, status: EnhanceTopicStatus) => void;
+  setTopicDeepDive: (topicId: string, updates: Partial<EnhanceTopicDeepDive>) => void;
+  setTopicInstructorNotes: (topicId: string, notes: string) => void;
+  addTopicMaterial: (topicId: string, file: UploadedFile) => void;
+  removeTopicMaterial: (topicId: string, fileId: string) => void;
+  setTopicSuggestions: (topicId: string, raw: string, suggestions: TopicSuggestion[]) => void;
+  toggleTopicSuggestion: (topicId: string, suggestionId: string) => void;
+  setTopicCalibration: (topicId: string, calibration: ModuleDifficultyCalibration) => void;
+  assignTopicQuestionLevel: (topicId: string, questionId: string, level: DifficultyLevel | null) => void;
+  setEnhanceSlidePlan: (plan: ModuleSlidePlan[]) => void;
+  updateEnhanceSlidePlanItem: (topicIndex: number, slideId: string, updates: Partial<SlidePlanItem>) => void;
+  addEnhanceSlide: (topicIndex: number, slide: SlidePlanItem) => void;
+  removeEnhanceSlide: (topicIndex: number, slideId: string) => void;
+  reorderEnhanceSlide: (topicIndex: number, fromIdx: number, toIdx: number) => void;
+  setEnhanceCourseContext: (ctx: EnhanceCourseContext | null) => void;
 }
 
 export type CurriculumStore = CurriculumState &

@@ -60,17 +60,17 @@ export function LessonsStep({
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-lg mb-1">
-          Step 3: Lessons & Activities
+          Step 3: Topics & Activities
         </h3>
         <p className="text-sm text-muted-foreground">
-          Toggle lessons and activities on/off, reorder lessons as needed.
+          Toggle topics and activities on/off, reorder topics as needed.
         </p>
       </div>
 
       {/* Lessons */}
       <div>
         <h4 className="font-medium text-sm mb-2">
-          Lessons ({enabledLessons} of {lessons.length} enabled)
+          Topics ({enabledLessons} of {lessons.length} enabled)
         </h4>
         <div className="space-y-2">
           {lessons.map((lesson, index) => (

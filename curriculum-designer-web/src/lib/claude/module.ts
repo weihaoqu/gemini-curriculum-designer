@@ -5,6 +5,7 @@ import type {
   CoreConcept,
   ModuleLessonPlan,
 } from "@/lib/types/curriculum";
+import { getAreaLabel } from "@/lib/claude/prompts";
 
 // --- Legacy prompt builders (kept for backward compatibility) ---
 
@@ -20,7 +21,7 @@ export function buildModuleProposalPrompt(
     .map((m, i) => `Module ${i + 1}: ${m.name}`)
     .join("\n");
 
-  return `I'm designing a course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
+  return `I'm designing a ${getAreaLabel(courseInfo.area)} course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
 
 ${previousContext ? `**Previously completed modules:**\n${previousContext}\n` : ""}
 
@@ -42,10 +43,10 @@ Generate the proposal in this format:
   - 📘 [Concept] - Cover normally
   - 💡 [Concept] - Optional deep-dive
 
-**Suggested Lessons:**
-1. Lesson Title - brief description
-2. Lesson Title - brief description
-(list 3-5 lessons)
+**Suggested Topics:**
+1. Topic Title - brief description
+2. Topic Title - brief description
+(list 3-6 key topics for this module)
 
 **Suggested Activities:**
 - 🛠️ [Hands-on Lab idea]
@@ -88,7 +89,7 @@ By the end of this module, students will be able to:
 - (Use Bloom's taxonomy verbs: analyze, evaluate, create, apply, design, etc.)
 - List 4-6 specific, measurable learning objectives
 
-## Lesson 1: [Title]
+## Topic 1: [Title]
 
 ### Overview
 (2-3 paragraph introduction establishing context and relevance)
@@ -99,7 +100,7 @@ By the end of this module, students will be able to:
    - Why it matters: ...
    - Example: ...
 
-(Repeat for each key concept in the lesson)
+(Repeat for each key concept in the topic)
 
 ### Hands-On Exercise
 **Exercise 1.1: [Title]**
@@ -110,7 +111,7 @@ By the end of this module, students will be able to:
 ### Discussion Questions
 1. [Thought-provoking question for class discussion]
 
-(Repeat the Lesson structure for all lessons in the module)
+(Repeat the Topic structure for all topics in the module)
 
 ## Module Summary
 - Key takeaways
@@ -139,7 +140,7 @@ export function buildPrerequisitesPrompt(
   totalModules: number,
   previousModules: CurriculumModule[]
 ): string {
-  return `I'm designing a course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
+  return `I'm designing a ${getAreaLabel(courseInfo.area)} course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
 
 ${buildPreviousContext(previousModules)}
 
@@ -175,7 +176,7 @@ export function buildConceptsPrompt(
     )
     .join("\n");
 
-  return `I'm designing a course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
+  return `I'm designing a ${getAreaLabel(courseInfo.area)} course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
 
 For Module ${moduleIndex + 1}: "${moduleName}"${moduleDescription ? ` — ${moduleDescription}` : ""}
 
@@ -228,7 +229,7 @@ ${prereqSummary || "(none)"}
 ${conceptSummary}
 
 Based on the prerequisites and core concepts, propose:
-1. **Lessons** — 3-5 lessons that logically sequence the concepts. Each lesson should have a teaching approach (e.g., "Problem-First", "Theory-to-Practice", "Scaffolding", "Hands-On Demo").
+1. **Topics** — 3-6 key topics that logically sequence the concepts for this module. Each module is typically taught in 1-2 class sessions, so these are the major topics covered within those sessions. Each topic should have a teaching approach (e.g., "Problem-First", "Theory-to-Practice", "Scaffolding", "Hands-On Demo").
 2. **Activities** — 3-4 activities (hands-on labs, interactive exercises, group work, individual practice).
 
 **Respond with ONLY valid JSON, no other text:**
@@ -236,8 +237,8 @@ Based on the prerequisites and core concepts, propose:
 {
   "lessons": [
     {
-      "title": "Lesson title",
-      "description": "Brief description of what this lesson covers",
+      "title": "Topic title",
+      "description": "Brief description of what this topic covers",
       "teachingApproach": "Problem-First|Theory-to-Practice|Scaffolding|Hands-On Demo"
     }
   ],
@@ -310,7 +311,7 @@ ${prereqSection}
 **Core Concepts:**
 ${conceptSection}
 
-**Lesson Plan:**
+**Topics:**
 ${lessonSection}
 
 **Activities:**
@@ -319,6 +320,8 @@ ${activitySection}
 ---
 
 Now generate the **full module content** for Module ${moduleIndex + 1}: "${moduleName}".
+
+Each module is typically taught in 1-2 class sessions. The topics listed above are the major sections within those sessions.
 
 Use this structure:
 
@@ -329,9 +332,9 @@ By the end of this module, students will be able to:
 - (Use Bloom's taxonomy verbs: analyze, evaluate, create, apply, design, etc.)
 - List 4-6 specific, measurable learning objectives
 
-For each lesson in the approved plan above, generate:
+For each topic in the approved plan above, generate:
 
-## Lesson N: [Title]
+## Topic N: [Title]
 
 ### Overview
 (2-3 paragraph introduction establishing context and relevance)
@@ -342,7 +345,7 @@ For each lesson in the approved plan above, generate:
    - Why it matters: ...
    - Example: ...
 
-(Cover the core concepts assigned to this lesson)
+(Cover the core concepts assigned to this topic)
 
 ### Hands-On Exercise
 **Exercise N.1: [Title]**
@@ -353,13 +356,13 @@ For each lesson in the approved plan above, generate:
 ### Discussion Questions
 1. [Thought-provoking question for class discussion]
 
-After all lessons, include:
+After all topics, include:
 
 ## Module Summary
 - Key takeaways
 - Preparation for next module
 
-Apply the teaching approach specified for each lesson (Problem-First, Theory-to-Practice, Scaffolding, or Hands-On Demo). For prerequisites marked as "include", weave them into the early lessons. For "recap" items, add a brief review section at the start.`;
+Apply the teaching approach specified for each topic (Problem-First, Theory-to-Practice, Scaffolding, or Hands-On Demo). For prerequisites marked as "include", weave them into the early topics. For "recap" items, add a brief review section at the start.`;
 }
 
 // --- Deep dive prompt ---
@@ -370,7 +373,7 @@ export function buildDeepDivePrompt(
   conceptName: string,
   conceptDescription: string
 ): string {
-  return `I'm designing a course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
+  return `I'm designing a ${getAreaLabel(courseInfo.area)} course on "${courseInfo.topic}" for ${courseInfo.audience} students using a ${courseInfo.philosophy} approach.
 
 In the module "${moduleName}", there's a concept: **${conceptName}**${conceptDescription ? ` — ${conceptDescription}` : ""}.
 

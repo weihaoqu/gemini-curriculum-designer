@@ -1,116 +1,93 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StreamingText } from "@/components/shared/StreamingText";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { useStreaming } from "@/lib/hooks/useStreaming";
+import { StreamingText } from "@/components/shared/StreamingText";
 import { cn } from "@/lib/utils";
-import type { DeliveryFormat } from "@/lib/types/curriculum";
+import type { AssessmentType, AssessmentConfig, QuestionFormat } from "@/lib/types/curriculum";
 
-const deliveryOptions: {
-  value: DeliveryFormat;
+const assessmentOptions: {
+  value: AssessmentType;
   label: string;
   description: string;
   icon: string;
-  details: string;
-  strengths: string[];
-  bestFor: string;
 }[] = [
   {
-    value: "slides",
-    label: "Slide Decks",
-    description: "Reveal.js / Markdown presentation slides",
-    icon: "\uD83D\uDCCA",
-    details:
-      "Generates presentation slides in Reveal.js/Markdown format. Each slide has clear structure with bullet points, code examples, and visual placeholders. Can be converted to PowerPoint or presented directly in a browser.",
-    strengths: [
-      "Great for live lectures and workshops",
-      "Visual structure helps pace delivery",
-      "Easy to share and present from any device",
-    ],
-    bestFor: "Instructors who teach live sessions or recorded lectures",
+    value: "quizzes",
+    label: "Quizzes",
+    description: "Knowledge checks with MCQ, short answer, and code analysis",
+    icon: "\u2753",
   },
   {
-    value: "jupyter",
-    label: "Jupyter Notebooks",
-    description: "Interactive coding lessons with exercises",
-    icon: "\uD83D\uDCD3",
-    details:
-      "Creates interactive notebooks that mix explanatory text, runnable code cells, and exercises. Students can read, run, and modify code in the same document. Includes \"YOUR CODE HERE\" placeholders for practice.",
-    strengths: [
-      "Interactive — students learn by doing",
-      "Code and explanation live together",
-      "Self-checking with assertion cells",
-    ],
-    bestFor: "Programming, data science, or any technical hands-on course",
+    value: "labs",
+    label: "Practical Labs",
+    description: "Hands-on skill assessments with rubrics",
+    icon: "\uD83D\uDD27",
   },
   {
-    value: "lms",
-    label: "LMS Package",
-    description: "Canvas/Moodle course structure and content",
-    icon: "\uD83C\uDFEB",
-    details:
-      "Generates a complete Learning Management System structure compatible with Canvas, Moodle, or similar platforms. Includes module pages, lesson content in HTML, quiz definitions, and assignment structures. Provides directory trees and file templates.",
-    strengths: [
-      "Ready to upload to institutional LMS",
-      "Includes quizzes in standard format",
-      "Familiar structure for students",
-    ],
-    bestFor: "University or corporate training with an existing LMS",
+    value: "projects",
+    label: "Projects",
+    description: "Applied learning with milestones and deliverables",
+    icon: "\uD83D\uDCC1",
   },
   {
-    value: "video-scripts",
-    label: "Video Scripts",
-    description: "Complete video course scripts with production notes",
-    icon: "\uD83C\uDFA5",
-    details:
-      "Produces timed scripts for video lessons with sections for intro, concept explanation, demonstration, practice, and wrap-up. Includes visual cues (what to show on screen), B-roll suggestions, and post-production notes like editing cues and chapter markers.",
-    strengths: [
-      "Professional production-ready scripts",
-      "Timed sections for consistent pacing",
-      "Visual + audio cues for editors",
-    ],
-    bestFor: "Creating online video courses (YouTube, Udemy, Coursera-style)",
+    value: "written",
+    label: "Written Assignments",
+    description: "Analysis, reflection, and essay prompts",
+    icon: "\u270D\uFE0F",
   },
   {
-    value: "github-repo",
-    label: "GitHub Repository",
-    description: "Full repo structure with code, docs, and CI",
-    icon: "\uD83D\uDCC2",
-    details:
-      "Generates a complete repository structure with folders for modules, labs, projects, and resources. Includes README templates, a syllabus, contributing guide for TAs, exercise starters with solutions, and GitHub Actions for auto-grading.",
-    strengths: [
-      "Industry-standard code sharing",
-      "Version control for course materials",
-      "Auto-grading with GitHub Actions",
-    ],
-    bestFor: "Technical courses where students work with code",
+    value: "peer-reviews",
+    label: "Peer Reviews",
+    description: "Collaborative assessment and feedback forms",
+    icon: "\uD83D\uDC65",
+  },
+  {
+    value: "portfolio",
+    label: "Portfolio",
+    description: "Cumulative demonstration of skills",
+    icon: "\uD83C\uDFC6",
   },
 ];
+
+const FORMAT_LABELS: Record<QuestionFormat, string> = {
+  "multiple-choice": "MC",
+  "short-answer": "SA",
+  "true-false": "T/F",
+  "fill-blank": "Fill",
+  poll: "Poll",
+  "code-analysis": "Code",
+  essay: "Essay",
+  matching: "Match",
+};
+
+function configSummary(config: AssessmentConfig): string {
+  const parts: string[] = [];
+  parts.push(`${config.questionCount} questions`);
+  const fmts = config.questionFormats.map((f) => FORMAT_LABELS[f]).join(" + ");
+  if (fmts) parts.push(fmts);
+  parts.push(config.difficulty === "auto" ? "auto difficulty" : config.difficulty);
+  if (config.perModule) parts.push("per module");
+  return parts.join(", ");
+}
 
 export default function Phase4Page() {
   const router = useRouter();
   const {
     courseInfo,
     modules,
-    selectedDeliveryFormats,
-    deliveryContent,
-    setSelectedDeliveryFormats,
-    setDeliveryContent,
+    difficultyCalibrations,
+    assessmentConfigs,
+    assessmentsContent,
+    removeAssessmentConfig,
+    setAssessmentsContent,
     setCurrentPhase,
   } = useCurriculumStore();
 
   const { content, isStreaming, stream } = useStreaming();
-  const [showFullContent, setShowFullContent] = useState(false);
 
   if (!courseInfo || modules.length === 0) {
     return (
@@ -125,192 +102,154 @@ export default function Phase4Page() {
     );
   }
 
-  const toggleFormat = (format: DeliveryFormat) => {
-    const current = selectedDeliveryFormats;
-    if (current.includes(format)) {
-      setSelectedDeliveryFormats(current.filter((f) => f !== format));
-    } else {
-      setSelectedDeliveryFormats([...current, format]);
-    }
-  };
+  const calibratedCount = difficultyCalibrations.filter(
+    (c) => c.selectedLevel
+  ).length;
+
+  const configuredTypes = new Set(assessmentConfigs.map((c) => c.type));
 
   const handleGenerate = async () => {
-    setShowFullContent(false);
-    const result = await stream("/api/curriculum/delivery", {
+    const result = await stream("/api/curriculum/assessment", {
       courseInfo,
       modules,
-      deliveryFormats: selectedDeliveryFormats,
+      assessmentConfigs,
+      assessmentTypes: assessmentConfigs.map((c) => c.type),
+      difficultyCalibrations,
     });
-    setDeliveryContent(result);
+    setAssessmentsContent(result);
+    router.push("/design/phase-4/results");
   };
 
-  const handleContinue = () => {
-    setCurrentPhase(4);
-    router.push("/design/review");
-  };
+  // If streaming, show inline progress
+  if (isStreaming) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold mb-2">Phase 4: Generating Assessments...</h1>
+        <p className="text-muted-foreground mb-6">
+          Building assessments for {assessmentConfigs.length} category
+          {assessmentConfigs.length !== 1 ? "ies" : "y"}. This may take a moment.
+        </p>
+        <div className="rounded-lg border p-6 bg-card">
+          <StreamingText content={content} isStreaming={true} />
+        </div>
+      </div>
+    );
+  }
 
-  const displayContent = content || deliveryContent || "";
-
-  // Extract section headers from the content for the summary view
-  const sections = displayContent
-    .split(/^## /gm)
-    .filter(Boolean)
-    .map((section) => {
-      const lines = section.split("\n");
-      const title = lines[0]?.trim() ?? "";
-      const body = lines.slice(1).join("\n").trim();
-      // Get first ~200 chars as preview
-      const preview =
-        body.length > 200 ? body.substring(0, 200) + "..." : body;
-      return { title, body, preview };
-    });
+  // If we already have results, offer to view them
+  const hasResults = !!assessmentsContent;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-2">Phase 4: Delivery Templates</h1>
-      <p className="text-muted-foreground mb-8">
-        Select delivery formats and generate ready-to-use templates. Click any
-        card to learn more about the format.
+      <h1 className="text-2xl font-bold mb-2">Phase 4: Assessment Design</h1>
+      <p className="text-muted-foreground mb-2">
+        Click each assessment type to configure difficulty, question formats, and count.
+        Configured cards show a green badge with a summary.
       </p>
+      {calibratedCount > 0 && (
+        <p className="text-xs text-muted-foreground mb-8">
+          Difficulty calibrated for {calibratedCount} module
+          {calibratedCount !== 1 ? "s" : ""} — choose &quot;Auto&quot; difficulty to use
+          per-module calibration.
+        </p>
+      )}
+      {calibratedCount === 0 && (
+        <p className="text-xs text-muted-foreground mb-8">
+          No difficulty calibration set. Assessments will use your selected
+          difficulty level.
+        </p>
+      )}
 
-      {/* Delivery format selection */}
+      {/* Assessment category cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-        {deliveryOptions.map((option) => {
-          const isSelected = selectedDeliveryFormats.includes(option.value);
+        {assessmentOptions.map((option) => {
+          const config = assessmentConfigs.find((c) => c.type === option.value);
+          const isConfigured = !!config;
           return (
             <Card
               key={option.value}
               className={cn(
-                "cursor-pointer transition-colors",
-                isSelected
-                  ? "border-primary bg-primary/5"
+                "cursor-pointer transition-colors relative",
+                isConfigured
+                  ? "border-green-500 bg-green-500/5"
                   : "hover:border-muted-foreground/30"
               )}
-              onClick={() => toggleFormat(option.value)}
+              onClick={() =>
+                router.push(`/design/phase-4/configure?type=${option.value}`)
+              }
+              title={
+                isConfigured
+                  ? `Configured. Click to edit.`
+                  : `Click to configure ${option.label}`
+              }
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{option.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{option.label}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {option.description}
-                    </p>
-                    {/* Expanded details */}
-                    <div className="mt-2 pt-2 border-t border-dashed">
-                      <p className="text-xs text-muted-foreground">
-                        {option.details}
-                      </p>
-                      <div className="mt-2">
-                        <p className="text-xs font-medium">Strengths:</p>
-                        <ul className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
-                          {option.strengths.map((s, i) => (
-                            <li key={i}>+ {s}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <p className="text-xs mt-1.5">
-                        <span className="font-medium">Best for:</span>{" "}
-                        <span className="text-muted-foreground">
-                          {option.bestFor}
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{option.label}</p>
+                      {isConfigured && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-green-400 font-medium">
+                          Configured
                         </span>
-                      </p>
+                      )}
                     </div>
-                  </div>
-                  <div
-                    className={cn(
-                      "mt-1 h-5 w-5 rounded border-2 flex items-center justify-center shrink-0",
-                      isSelected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-muted-foreground/30"
-                    )}
-                  >
-                    {isSelected && (
-                      <span className="text-xs">{"\u2713"}</span>
-                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isConfigured
+                        ? configSummary(config)
+                        : option.description}
+                    </p>
                   </div>
                 </div>
+                {isConfigured && (
+                  <button
+                    className="absolute top-2 right-2 text-muted-foreground hover:text-destructive text-xs px-1.5 py-0.5 rounded hover:bg-destructive/10 transition-colors"
+                    title="Remove configuration"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeAssessmentConfig(option.value);
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      <Button
-        onClick={handleGenerate}
-        disabled={selectedDeliveryFormats.length === 0 || isStreaming}
-        size="lg"
-        className="mb-8"
-      >
-        {isStreaming ? "Generating Templates..." : "Generate Templates"}
-      </Button>
-
-      {/* Results */}
-      {displayContent && (
-        <div className="space-y-6">
-          {/* While streaming, show full content */}
-          {isStreaming && (
-            <div className="rounded-lg border p-6 bg-card">
-              <StreamingText content={displayContent} isStreaming={true} />
-            </div>
-          )}
-
-          {/* After streaming, show summary with expandable sections */}
-          {!isStreaming && sections.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">
-                  Generated Templates ({sections.length} sections)
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFullContent(!showFullContent)}
-                >
-                  {showFullContent ? "Show Summary" : "Show Full Content"}
-                </Button>
-              </div>
-
-              {showFullContent ? (
-                <div className="rounded-lg border p-6 bg-card">
-                  <StreamingText
-                    content={displayContent}
-                    isStreaming={false}
-                  />
-                </div>
-              ) : (
-                <Accordion type="multiple" className="space-y-2">
-                  {sections.map((section, i) => (
-                    <AccordionItem
-                      key={i}
-                      value={`section-${i}`}
-                      className="border rounded-lg px-4"
-                    >
-                      <AccordionTrigger className="text-sm font-medium">
-                        {section.title || `Section ${i + 1}`}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="rounded-lg bg-muted/30 p-4">
-                          <StreamingText
-                            content={section.body}
-                            isStreaming={false}
-                          />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
-            </div>
-          )}
-
-          {!isStreaming && displayContent && (
-            <Button onClick={handleContinue} size="lg">
-              Continue to Review & Export
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="flex gap-3">
+        <Button
+          onClick={handleGenerate}
+          disabled={assessmentConfigs.length === 0}
+          size="lg"
+        >
+          Generate Assessments ({assessmentConfigs.length} configured)
+        </Button>
+        {hasResults && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => router.push("/design/phase-4/results")}
+          >
+            View Previous Results
+          </Button>
+        )}
+        {hasResults && (
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={() => {
+              setCurrentPhase(4);
+              router.push("/design/phase-5");
+            }}
+          >
+            Skip to Phase 5
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

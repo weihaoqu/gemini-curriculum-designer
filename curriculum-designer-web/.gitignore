@@ -43,3 +43,6 @@ next-env.d.ts
 
 # docker
 docker-compose.override.yml
+
+# sqlite data
+/data/

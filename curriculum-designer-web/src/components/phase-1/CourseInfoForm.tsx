@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 import type { CourseInfo } from "@/lib/types/curriculum";
 
 const courseInfoSchema = z.object({
+  scope: z.enum(["full-course", "single-topic"]),
+  area: z.enum([
+    "computer-science", "business", "mathematics", "biology", "engineering",
+    "arts-humanities", "social-sciences", "health-sciences", "education", "other",
+  ]),
   topic: z.string().min(3, "Topic must be at least 3 characters"),
   audience: z.enum(["beginners", "intermediate", "advanced", "mixed"]),
   format: z.enum(["semester", "bootcamp", "workshop", "self-paced"]),
@@ -22,6 +27,24 @@ interface CourseInfoFormProps {
   onSubmit: (data: CourseInfo) => void;
   isLoading: boolean;
 }
+
+const areaOptions = [
+  { value: "computer-science" as const, label: "Computer Science", description: "Programming, systems, AI" },
+  { value: "business" as const, label: "Business", description: "Management, finance, strategy" },
+  { value: "mathematics" as const, label: "Mathematics", description: "Calculus, algebra, statistics" },
+  { value: "biology" as const, label: "Biology", description: "Life sciences, ecology, genetics" },
+  { value: "engineering" as const, label: "Engineering", description: "Mechanical, electrical, civil" },
+  { value: "arts-humanities" as const, label: "Arts & Humanities", description: "Literature, philosophy, art" },
+  { value: "social-sciences" as const, label: "Social Sciences", description: "Psychology, sociology, politics" },
+  { value: "health-sciences" as const, label: "Health Sciences", description: "Nursing, public health, anatomy" },
+  { value: "education" as const, label: "Education", description: "Pedagogy, curriculum, training" },
+  { value: "other" as const, label: "Other", description: "Interdisciplinary or niche" },
+];
+
+const scopeOptions = [
+  { value: "single-topic" as const, label: "Single Topic", description: "One week of focused materials" },
+  { value: "full-course" as const, label: "Full Course", description: "Complete multi-module course" },
+];
 
 const audienceOptions = [
   { value: "beginners" as const, label: "Beginners", description: "No prior knowledge" },
@@ -49,16 +72,21 @@ function RadioCardGroup<T extends string>({
   value,
   onChange,
   label,
+  columns,
 }: {
   options: { value: T; label: string; description: string }[];
   value: T | undefined;
   onChange: (val: T) => void;
   label: string;
+  columns?: number;
 }) {
   return (
     <div>
       <Label className="text-sm font-medium mb-3 block">{label}</Label>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className={cn(
+        "grid grid-cols-2 gap-3",
+        columns === 5 ? "sm:grid-cols-5" : "sm:grid-cols-4"
+      )}>
         {options.map((option) => (
           <Card
             key={option.value}
@@ -85,6 +113,8 @@ export function CourseInfoForm({ defaultValues, onSubmit, isLoading }: CourseInf
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CourseInfo>({
     resolver: zodResolver(courseInfoSchema),
     defaultValues: defaultValues ?? {
+      scope: "single-topic",
+      area: "computer-science",
       topic: "",
       audience: "beginners",
       format: "semester",
@@ -92,12 +122,29 @@ export function CourseInfoForm({ defaultValues, onSubmit, isLoading }: CourseInf
     },
   });
 
+  const scope = watch("scope");
+  const area = watch("area");
   const audience = watch("audience");
   const format = watch("format");
   const philosophy = watch("philosophy");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <RadioCardGroup
+        label="What scope are you designing for?"
+        options={scopeOptions}
+        value={scope}
+        onChange={(val) => setValue("scope", val)}
+      />
+
+      <RadioCardGroup
+        label="What discipline or subject area?"
+        options={areaOptions}
+        value={area}
+        onChange={(val) => setValue("area", val)}
+        columns={5}
+      />
+
       <div>
         <Label htmlFor="topic" className="text-sm font-medium mb-2 block">
           What is the main topic or subject area?
@@ -120,12 +167,14 @@ export function CourseInfoForm({ defaultValues, onSubmit, isLoading }: CourseInf
         onChange={(val) => setValue("audience", val)}
       />
 
-      <RadioCardGroup
-        label="What course format works best?"
-        options={formatOptions}
-        value={format}
-        onChange={(val) => setValue("format", val)}
-      />
+      {scope === "full-course" && (
+        <RadioCardGroup
+          label="What course format works best?"
+          options={formatOptions}
+          value={format}
+          onChange={(val) => setValue("format", val)}
+        />
+      )}
 
       <RadioCardGroup
         label="What's your primary teaching philosophy?"

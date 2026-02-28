@@ -79,8 +79,8 @@ export function TopicLandscapeView({
         <AccordionContent>
           {interactive && (
             <p className="text-xs text-muted-foreground mb-3">
-              Click the badge on each card to include or skip items from your
-              final plan.
+              Items are skipped by default. Click the badge to include items
+              you want in your curriculum.
             </p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
@@ -126,8 +126,8 @@ export function TopicLandscapeView({
         <AccordionContent>
           {interactive && (
             <p className="text-xs text-muted-foreground mb-3">
-              Click the badge on each card to include or skip items from your
-              final plan.
+              Items are skipped by default. Click the badge to include items
+              you want in your curriculum.
             </p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
@@ -180,8 +180,8 @@ export function TopicLandscapeView({
         <AccordionContent>
           {interactive && (
             <p className="text-xs text-muted-foreground mb-3">
-              Click the badge on each card to include or skip items from your
-              final plan.
+              Items are skipped by default. Click the badge to include items
+              you want in your curriculum.
             </p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">

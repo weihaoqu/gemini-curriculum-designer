@@ -6,22 +6,22 @@ import { useCurriculumStore } from "@/lib/store/curriculum-store";
 
 const features = [
   {
-    icon: "\uD83C\uDFAF",
+    image: "/illustrations/course-vision.png",
     title: "Course Vision",
     description: "Define your topic, audience, and teaching philosophy. Get AI-powered research on current trends.",
   },
   {
-    icon: "\uD83D\uDCDA",
+    image: "/illustrations/module-design.png",
     title: "Module Design",
     description: "Build detailed modules with learning objectives, lessons, exercises, and discussion questions.",
   },
   {
-    icon: "\uD83D\uDCDD",
+    image: "/illustrations/assessments.png",
     title: "Assessments",
     description: "Generate quizzes, labs, projects, peer reviews, and portfolios with complete rubrics.",
   },
   {
-    icon: "\uD83D\uDE80",
+    image: "/illustrations/delivery.png",
     title: "Delivery Templates",
     description: "Get slide decks, Jupyter notebooks, LMS packages, video scripts, and GitHub repo structures.",
   },
@@ -55,14 +55,21 @@ export default function HomePage() {
         {/* Two-card entry */}
         <div className="mt-12 grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
           <Card
-            className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-lg"
+            className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-lg overflow-hidden"
             onClick={() => {
               setMode("create");
               router.push("/design/phase-1");
             }}
           >
-            <CardContent className="pt-8 pb-8 text-center">
-              <div className="text-5xl mb-4">&#x2795;</div>
+            <div className="h-44 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-4 border-b">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/illustrations/create-new.png"
+                alt="Create New Curriculum"
+                className="h-36 w-36 object-contain"
+              />
+            </div>
+            <CardContent className="pt-6 pb-8 text-center">
               <h3 className="text-xl font-semibold mb-2">Create New Curriculum</h3>
               <p className="text-sm text-muted-foreground">
                 Build a structured curriculum from scratch with AI-guided research,
@@ -72,14 +79,21 @@ export default function HomePage() {
           </Card>
 
           <Card
-            className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-lg"
+            className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-lg overflow-hidden"
             onClick={() => {
               setMode("enhance");
               router.push("/design/enhance/step-1");
             }}
           >
-            <CardContent className="pt-8 pb-8 text-center">
-              <div className="text-5xl mb-4">&#x1F504;</div>
+            <div className="h-44 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-4 border-b">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/illustrations/enhance-existing.png"
+                alt="Enhance Existing Curriculum"
+                className="h-36 w-36 object-contain"
+              />
+            </div>
+            <CardContent className="pt-6 pb-8 text-center">
               <h3 className="text-xl font-semibold mb-2">Enhance Existing Curriculum</h3>
               <p className="text-sm text-muted-foreground">
                 Upload your existing course materials for AI-powered analysis,
@@ -94,14 +108,46 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pb-20">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature) => (
-            <Card key={feature.title} className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-4xl mb-4">{feature.icon}</div>
+            <Card key={feature.title} className="text-center overflow-hidden">
+              <div className="h-36 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-3 border-b">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="h-28 w-28 object-contain"
+                />
+              </div>
+              <CardContent className="pt-4">
                 <h3 className="font-semibold mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* Attribution */}
+      <section className="py-10">
+        <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/learnai-logo.png"
+              alt="LearnAI Team"
+              className="h-16"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mu-csse-logo.png"
+              alt="Monmouth University CSSE Department"
+              className="h-16"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground text-center">
+            Designed and implemented by Dr. Weihao Qu, Ling Zheng
+            <br />
+            <span className="text-xs">Supported by LearnAI Team, CSSE Department, Monmouth University</span>
+          </p>
         </div>
       </section>
 
@@ -141,12 +187,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t py-6">
-        <div className="mx-auto max-w-6xl px-4 text-center text-sm text-muted-foreground">
-          Developed and designed by Dr. Weihao Qu, CSSE Department, Monmouth University
-        </div>
-      </footer>
     </div>
   );
 }

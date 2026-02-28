@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CourseInfoForm } from "@/components/phase-1/CourseInfoForm";
 import { TopicLandscapeView } from "@/components/phase-1/TopicLandscapeView";
@@ -14,6 +14,8 @@ import {
   stripJSONBlocks,
 } from "@/lib/parsers";
 import type { CourseInfo, CurriculumModule } from "@/lib/types/curriculum";
+
+type Step = "form" | "landscape" | "modules";
 
 export default function Phase1Page() {
   const router = useRouter();
@@ -33,6 +35,15 @@ export default function Phase1Page() {
     toggleLandscapeItem,
   } = useCurriculumStore();
 
+  // Auto-detect initial step from existing store data
+  const initialStep = useMemo<Step>(() => {
+    if (suggestedModulesStructured && suggestedModulesStructured.length > 0)
+      return "modules";
+    if (topicLandscapeStructured || topicLandscape) return "landscape";
+    return "form";
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [step, setStep] = useState<Step>(initialStep);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState(topicLandscape ?? "");
 
@@ -43,6 +54,7 @@ export default function Phase1Page() {
       setStreamedContent("");
       setTopicLandscapeStructured(null);
       setSuggestedModulesStructured(null);
+      setStep("landscape");
 
       try {
         const response = await fetch("/api/curriculum/research", {
@@ -126,7 +138,6 @@ export default function Phase1Page() {
     const structured = suggestedModulesStructured;
 
     if (structured && structured.length > 0) {
-      // Use structured module data
       const modules: CurriculumModule[] = structured.map((m) => ({
         name: m.name,
         description: m.description,
@@ -182,9 +193,11 @@ export default function Phase1Page() {
     router.push("/design/phase-2");
   };
 
-  const hasContent = streamedContent || topicLandscape;
   const showStructuredLandscape = !isStreaming && topicLandscapeStructured;
-  const showStructuredModules = !isStreaming && suggestedModulesStructured && suggestedModulesStructured.length > 0;
+  const showStructuredModules =
+    !isStreaming &&
+    suggestedModulesStructured &&
+    suggestedModulesStructured.length > 0;
 
   return (
     <div>
@@ -193,14 +206,18 @@ export default function Phase1Page() {
         Define your course parameters and let AI research the topic landscape.
       </p>
 
-      <CourseInfoForm
-        defaultValues={courseInfo}
-        onSubmit={handleSubmit}
-        isLoading={isStreaming}
-      />
+      {/* Step: Form */}
+      {step === "form" && (
+        <CourseInfoForm
+          defaultValues={courseInfo}
+          onSubmit={handleSubmit}
+          isLoading={isStreaming}
+        />
+      )}
 
-      {hasContent && (
-        <div className="mt-10 space-y-8">
+      {/* Step: Landscape */}
+      {step === "landscape" && (
+        <div className="space-y-6">
           <div>
             <h2 className="text-xl font-semibold mb-4">Topic Landscape</h2>
 
@@ -219,30 +236,53 @@ export default function Phase1Page() {
             )}
           </div>
 
-          {!isStreaming && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Suggested Modules</h2>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setStep("form")}
+            >
+              Back to Course Info
+            </Button>
+            {!isStreaming && (
+              <Button onClick={() => setStep("modules")}>
+                Continue to Module Breakdown
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
-              {showStructuredModules ? (
-                <ModuleListEditor />
-              ) : (
-                suggestedModules && (
-                  <div className="rounded-lg border p-6 bg-card">
-                    <StreamingText
-                      content={suggestedModules}
-                      isStreaming={false}
-                    />
-                  </div>
-                )
-              )}
+      {/* Step: Modules */}
+      {step === "modules" && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Suggested Modules</h2>
 
-              <div className="mt-6 flex gap-3">
-                <Button onClick={handleApproveModules} size="lg">
-                  Approve & Continue to Module Design
-                </Button>
-              </div>
-            </div>
-          )}
+            {showStructuredModules ? (
+              <ModuleListEditor />
+            ) : (
+              suggestedModules && (
+                <div className="rounded-lg border p-6 bg-card">
+                  <StreamingText
+                    content={suggestedModules}
+                    isStreaming={false}
+                  />
+                </div>
+              )
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setStep("landscape")}
+            >
+              Back to Landscape
+            </Button>
+            <Button onClick={handleApproveModules} size="lg">
+              Approve & Continue to Module Design
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -8,17 +8,17 @@ import { useCurriculumStore } from "@/lib/store/curriculum-store";
 const createPhases = [
   { number: 1, label: "Course Vision", path: "/design/phase-1", phase: 1 as const },
   { number: 2, label: "Module Design", path: "/design/phase-2", phase: 2 as const },
-  { number: 3, label: "Assessments", path: "/design/phase-3", phase: 3 as const },
-  { number: 4, label: "Delivery", path: "/design/phase-4", phase: 4 as const },
-  { number: 5, label: "Review & Export", path: "/design/review", phase: 4 as const },
+  { number: 3, label: "Difficulty", path: "/design/phase-3", phase: 3 as const },
+  { number: 4, label: "Assessments", path: "/design/phase-4", phase: 4 as const },
+  { number: 5, label: "Delivery", path: "/design/phase-5", phase: 5 as const },
+  { number: 6, label: "Review & Export", path: "/design/review", phase: 5 as const },
 ];
 
 const enhancePhases = [
-  { number: 1, label: "Analyze Materials", path: "/design/enhance/step-1", phase: 1 as const },
-  { number: 2, label: "What's New", path: "/design/enhance/step-2", phase: 2 as const },
-  { number: 3, label: "Enhancements", path: "/design/enhance/step-3", phase: 3 as const },
-  { number: 4, label: "Apply Changes", path: "/design/enhance/step-4", phase: 4 as const },
-  { number: 5, label: "Review & Export", path: "/design/enhance/review", phase: 4 as const },
+  { number: 1, label: "Scope Analysis", path: "/design/enhance/step-1", phase: 1 as const },
+  { number: 2, label: "Topic Enhancement", path: "/design/enhance/step-2", phase: 2 as const },
+  { number: 3, label: "Slide Plan", path: "/design/enhance/step-3", phase: 3 as const },
+  { number: 4, label: "Review & Export", path: "/design/enhance/review", phase: 4 as const },
 ];
 
 export function PhaseIndicator() {

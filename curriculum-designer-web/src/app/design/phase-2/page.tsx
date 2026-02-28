@@ -163,8 +163,8 @@ export default function Phase2Page() {
                   }
                 >
                   {completedCount < modules.length
-                    ? `Continue to Assessments (${completedCount}/${modules.length} done)`
-                    : "Continue to Assessments"}
+                    ? `Continue to Difficulty Calibration (${completedCount}/${modules.length} done)`
+                    : "Continue to Difficulty Calibration"}
                 </Button>
               )}
             </div>
@@ -174,7 +174,7 @@ export default function Phase2Page() {
           {currentModule.status !== "complete" && hasAnyComplete && (
             <div className="pt-6 mt-6 border-t">
               <Button onClick={handleContinue} variant="outline">
-                Continue to Assessments ({completedCount}/{modules.length} modules done)
+                Continue to Difficulty Calibration ({completedCount}/{modules.length} modules done)
               </Button>
             </div>
           )}

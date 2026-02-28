@@ -43,5 +43,24 @@ When proposing enhancements:
 - Rate impact as high/medium/low based on learning outcome improvement
 - Ensure changes maintain pedagogical coherence with the existing curriculum`;
 
+import type { CourseArea } from "@/lib/types/curriculum";
+
+export const AREA_LABELS: Record<CourseArea, string> = {
+  "computer-science": "Computer Science",
+  business: "Business & Management",
+  mathematics: "Mathematics",
+  biology: "Biology & Life Sciences",
+  engineering: "Engineering",
+  "arts-humanities": "Arts & Humanities",
+  "social-sciences": "Social Sciences",
+  "health-sciences": "Health Sciences",
+  education: "Education",
+  other: "General / Interdisciplinary",
+};
+
+export function getAreaLabel(area: CourseArea | undefined): string {
+  return area ? AREA_LABELS[area] : "General";
+}
+
 export const MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0";
 export const MAX_TOKENS = 8192;

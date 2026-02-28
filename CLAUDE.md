@@ -37,4 +37,4 @@ When creating clickable elements (toggle badges, cycling buttons, action labels)
 A badge that says "include" looks identical to a static label. Without hints, users will never discover they can click it.
 
 ### Attribution
-Always include copyright: "Developed and designed by Dr. Weihao Qu, CSSE Department, Monmouth University" — on the landing page footer and in the app sidebar.
+Always include copyright: "Designed and implemented by Dr. Weihao Qu, Ling Zheng. Supported by LearnAI Team, CSSE Department, Monmouth University" — on the landing page footer and in the app sidebar. Use the LearnAI logo (`/learnai-logo.png`).

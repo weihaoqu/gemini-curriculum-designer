@@ -15,7 +15,7 @@ export function buildSlideMeta(state: CurriculumStore): SlideMeta {
     return {
       title: `${courseName} — Enhancement Report`,
       subtitle: `${state.changes.filter((c) => c.status === "approved").length} approved changes`,
-      author: "Dr. Weihao Qu, CSSE Department, Monmouth University",
+      author: "Dr. Weihao Qu, Ling Zheng — LearnAI Team, CSSE Department, Monmouth University",
       mode: "enhance",
     };
   }
@@ -30,7 +30,7 @@ export function buildSlideMeta(state: CurriculumStore): SlideMeta {
     subtitle: subtitleParts.length
       ? subtitleParts.map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" · ")
       : "",
-    author: "Dr. Weihao Qu, CSSE Department, Monmouth University",
+    author: "Dr. Weihao Qu, Ling Zheng — LearnAI Team, CSSE Department, Monmouth University",
     mode: "create",
   };
 }

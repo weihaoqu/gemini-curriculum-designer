@@ -1,16 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PhaseIndicator } from "./PhaseIndicator";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { FeedbackDialog } from "@/components/shared/FeedbackDialog";
 
 export function WizardShell({ children }: { children: React.ReactNode }) {
   const reset = useCurriculumStore((s) => s.reset);
   const mode = useCurriculumStore((s) => s.mode);
   const courseInfo = useCurriculumStore((s) => s.courseInfo);
   const analysisReport = useCurriculumStore((s) => s.analysisReportStructured);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const contextLabel = mode === "enhance"
     ? analysisReport?.courseName
@@ -61,11 +65,54 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
             <span className="md:hidden">&#x21BB;</span>
           </Button>
         </div>
-        <div className="hidden md:block px-3 pb-3">
+        <div className="p-2 md:p-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs gap-1.5"
+            onClick={() => setFeedbackOpen(true)}
+            title="Send feedback — report bugs, request features, or share ideas"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span className="hidden md:inline">Send Feedback</span>
+            <span className="md:hidden">&#x1F4AC;</span>
+          </Button>
+        </div>
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+        <div className="hidden md:flex flex-col items-center gap-2 px-3 pb-3">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/learnai-logo.png"
+              alt="LearnAI Team"
+              width={56}
+              height={28}
+              className="opacity-60"
+            />
+            <Image
+              src="/mu-csse-logo.png"
+              alt="Monmouth University CSSE Department"
+              width={56}
+              height={28}
+              className="opacity-60"
+            />
+          </div>
           <p className="text-[10px] text-muted-foreground/60 text-center leading-tight">
-            Developed by Dr. Weihao Qu
+            Dr. Weihao Qu, Ling Zheng
             <br />
-            CSSE Dept, Monmouth University
+            Supported by LearnAI Team
           </p>
         </div>
       </aside>

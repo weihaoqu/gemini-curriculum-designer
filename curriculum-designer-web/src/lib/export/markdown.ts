@@ -84,6 +84,29 @@ function buildCreateExportFiles(state: CurriculumStore): ExportFile[] {
     });
   }
 
+  // Slide plan
+  if (state.slidePlan) {
+    let content = `# ${topic} - Slide Plan\n\n`;
+    for (const mp of state.slidePlan) {
+      content += `## Module ${mp.moduleIndex + 1}: ${mp.moduleName}\n\n`;
+      for (const slide of mp.slides) {
+        const status = slide.enabled ? "" : " ~~(excluded)~~";
+        content += `### [${slide.slideType.toUpperCase()}] ${slide.title}${status}\n`;
+        for (const bp of slide.bulletPoints) {
+          content += `- ${bp}\n`;
+        }
+        if (slide.teachingNotes) {
+          content += `\n> **Instructor:** ${slide.teachingNotes}\n`;
+        }
+        if (slide.notes) {
+          content += `\n> ${slide.notes}\n`;
+        }
+        content += `\n`;
+      }
+    }
+    files.push({ name: "slide-plan.md", content });
+  }
+
   // Delivery plan
   if (state.deliveryContent) {
     files.push({
@@ -97,53 +120,95 @@ function buildCreateExportFiles(state: CurriculumStore): ExportFile[] {
 
 function buildEnhanceExportFiles(state: CurriculumStore): ExportFile[] {
   const files: ExportFile[] = [];
-  const courseName = state.analysisReportStructured?.courseName ?? "curriculum";
+  const courseName = "Curriculum Enhancement";
 
-  // Analysis report
+  // Scope analysis
+  if (state.enhanceScopeRaw) {
+    let content = `# ${courseName} - Scope Analysis\n\n${state.enhanceScopeRaw}\n`;
+
+    // Accepted scope suggestions
+    const accepted = state.enhanceScopeSuggestions.filter((s) => s.accepted);
+    if (accepted.length > 0) {
+      content += `\n## Accepted Scope Changes\n\n`;
+      for (const s of accepted) {
+        content += `- **[${s.type}] ${s.title}**: ${s.description}\n`;
+      }
+    }
+
+    files.push({ name: "scope-analysis.md", content });
+  }
+
+  // Per-topic enhancements
+  const selectedTopics = state.enhanceTopics.filter((t) => t.selected);
+  if (selectedTopics.length > 0) {
+    let content = `# ${courseName} - Topic Enhancements\n\n`;
+
+    for (const topic of selectedTopics) {
+      const dd = state.enhanceTopicDeepDives.find((d) => d.topicId === topic.id);
+      const selectedSuggestions = dd?.suggestions.filter((s) => s.selected) ?? [];
+
+      if (selectedSuggestions.length === 0 && !dd?.calibration) continue;
+
+      content += `## ${topic.weekOrModule}: ${topic.name}\n\n`;
+      content += `${topic.description}\n\n`;
+
+      if (selectedSuggestions.length > 0) {
+        content += `### Selected Enhancements\n\n`;
+        for (const s of selectedSuggestions) {
+          content += `- **[${s.category}] ${s.title}**: ${s.description}\n`;
+        }
+        content += `\n`;
+      }
+
+      // Calibration summary
+      if (dd?.calibration) {
+        const counts = { basic: 0, intermediate: 0, advanced: 0 };
+        for (const q of dd.calibration.questions) {
+          const level = dd.calibration.assignedLevels?.[q.id] as "basic" | "intermediate" | "advanced" | null;
+          if (level && level in counts) counts[level]++;
+        }
+        if (counts.basic + counts.intermediate + counts.advanced > 0) {
+          content += `### Difficulty Calibration\n\n`;
+          content += `- Basic: ${counts.basic} questions\n`;
+          content += `- Intermediate: ${counts.intermediate} questions\n`;
+          content += `- Advanced: ${counts.advanced} questions\n\n`;
+        }
+      }
+
+      content += `---\n\n`;
+    }
+
+    files.push({ name: "topic-enhancements.md", content });
+  }
+
+  // Slide plan
+  if (state.enhanceSlidePlan) {
+    let content = `# ${courseName} - Slide Plan\n\n`;
+    for (const mp of state.enhanceSlidePlan) {
+      content += `## Topic ${mp.moduleIndex + 1}: ${mp.moduleName}\n\n`;
+      for (const slide of mp.slides) {
+        const status = slide.enabled ? "" : " ~~(excluded)~~";
+        content += `### [${slide.slideType.toUpperCase()}] ${slide.title}${status}\n`;
+        for (const bp of slide.bulletPoints) {
+          content += `- ${bp}\n`;
+        }
+        if (slide.teachingNotes) {
+          content += `\n> **Instructor:** ${slide.teachingNotes}\n`;
+        }
+        if (slide.notes) {
+          content += `\n> ${slide.notes}\n`;
+        }
+        content += `\n`;
+      }
+    }
+    files.push({ name: "slide-plan.md", content });
+  }
+
+  // Legacy: keep old enhance export files if they have data
   if (state.analysisReportRaw) {
     files.push({
       name: "analysis-report.md",
-      content: `# ${courseName} - Analysis Report\n\n${state.analysisReportRaw}`,
-    });
-  }
-
-  // What's New research
-  if (state.whatsNewContent) {
-    files.push({
-      name: "whats-new.md",
-      content: `# ${courseName} - What's New\n\n${state.whatsNewContent}`,
-    });
-  }
-
-  // Approved changes only
-  const approvedChanges = state.changes.filter((c) => c.status === "approved");
-  if (approvedChanges.length > 0) {
-    const changesContent = approvedChanges
-      .map((c) => {
-        let section = `## ${c.title}\n\n`;
-        if (c.before) {
-          section += `### Before\n${c.before}\n\n### After\n`;
-        }
-        section += c.after;
-        return section;
-      })
-      .join("\n\n---\n\n");
-
-    files.push({
-      name: "changes.md",
-      content: `# ${courseName} - Applied Changes\n\n${changesContent}`,
-    });
-  }
-
-  // Changelog
-  if (state.changelog.length > 0) {
-    const changelogContent = state.changelog
-      .map((entry) => `- **[${entry.category}]** ${entry.description} (${entry.date})`)
-      .join("\n");
-
-    files.push({
-      name: "changelog.md",
-      content: `# ${courseName} - Changelog\n\n${changelogContent}`,
+      content: `# Analysis Report\n\n${state.analysisReportRaw}`,
     });
   }
 
