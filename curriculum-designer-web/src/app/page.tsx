@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCurriculumStore } from "@/lib/store/curriculum-store";
+import { apiUrl } from "@/lib/utils";
 
 const features = [
   {
@@ -64,7 +65,7 @@ export default function HomePage() {
             <div className="h-44 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-4 border-b">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/illustrations/create-new.png"
+                src={apiUrl("/illustrations/create-new.png")}
                 alt="Create New Curriculum"
                 className="h-36 w-36 object-contain"
               />
@@ -88,7 +89,7 @@ export default function HomePage() {
             <div className="h-44 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-4 border-b">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/illustrations/enhance-existing.png"
+                src={apiUrl("/illustrations/enhance-existing.png")}
                 alt="Enhance Existing Curriculum"
                 className="h-36 w-36 object-contain"
               />
@@ -112,7 +113,7 @@ export default function HomePage() {
               <div className="h-36 bg-gradient-to-b from-muted/50 to-muted/20 flex items-center justify-center p-3 border-b">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={feature.image}
+                  src={apiUrl(feature.image)}
                   alt={feature.title}
                   className="h-28 w-28 object-contain"
                 />
@@ -132,13 +133,13 @@ export default function HomePage() {
           <div className="flex items-center gap-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/learnai-logo.png"
+              src={apiUrl("/learnai-logo.png")}
               alt="LearnAI Team"
               className="h-16"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/mu-csse-logo.png"
+              src={apiUrl("/mu-csse-logo.png")}
               alt="Monmouth University CSSE Department"
               className="h-16"
             />
